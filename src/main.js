@@ -140,6 +140,9 @@ const QR_URL = '/assets/qr.png';
 const bassArrayBufferPromise = fetch(BASS_URL)
   .then((r) => (r.ok ? r.arrayBuffer() : null))
   .catch(() => null);
+const bassHtmlAudio = new Audio(BASS_URL);
+bassHtmlAudio.preload = 'auto';
+bassHtmlAudio.playsInline = true;
 
 // Cache-bust preload for QR + fallback (ensures they’re “included” and warm in cache).
 fetch(QR_URL, { cache: 'force-cache' }).catch(() => {});
@@ -311,22 +314,31 @@ function synthBassSlam(context) {
 let bassBuffer = null;
 
 async function playBassHit(context) {
-  const t0 = context.currentTime;
-  if (!bassBuffer) {
-    const ab = await bassArrayBufferPromise;
-    if (!ab) throw new Error('bass-hit.wav unavailable');
-    bassBuffer = await context.decodeAudioData(ab.slice(0));
+  // Preferred path: Web Audio for low-latency, processed playback.
+  try {
+    const t0 = context.currentTime;
+    if (!bassBuffer) {
+      const ab = await bassArrayBufferPromise;
+      if (!ab) throw new Error('bass-hit.wav unavailable');
+      bassBuffer = await context.decodeAudioData(ab.slice(0));
+    }
+    const src = context.createBufferSource();
+    src.buffer = bassBuffer;
+    const g = context.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(1.0, t0 + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + Math.min(1.2, bassBuffer.duration));
+    src.connect(g);
+    g.connect(context.destination);
+    src.start(t0);
+    src.stop(t0 + Math.min(1.25, bassBuffer.duration + 0.05));
+    return;
+  } catch {
+    // Fallback: direct HTML audio element playback for compatibility.
   }
-  const src = context.createBufferSource();
-  src.buffer = bassBuffer;
-  const g = context.createGain();
-  g.gain.setValueAtTime(0.0001, t0);
-  g.gain.exponentialRampToValueAtTime(1.0, t0 + 0.015);
-  g.gain.exponentialRampToValueAtTime(0.0001, t0 + Math.min(1.2, bassBuffer.duration));
-  src.connect(g);
-  g.connect(context.destination);
-  src.start(t0);
-  src.stop(t0 + Math.min(1.25, bassBuffer.duration + 0.05));
+  bassHtmlAudio.currentTime = 0;
+  bassHtmlAudio.volume = 1;
+  await bassHtmlAudio.play();
 }
 
 // —— Device orientation ————————————————————————————————————————————
