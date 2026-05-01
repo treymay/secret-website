@@ -54,28 +54,35 @@ vec2 coverUv(vec2 uv) {
   return vec2(uv.x, off + uv.y * s);
 }
 
+vec2 cameraUv(vec2 uv) {
+  vec2 cuv = coverUv(uv);
+  // Mirror horizontally so movement feels natural like a mirror preview.
+  cuv.x = 1.0 - cuv.x;
+  return cuv;
+}
+
 vec4 sampleBlur(vec2 uvIn) {
   vec2 px = vec2(1.0 / max(u_videoSize.x, 1.0), 1.0 / max(u_videoSize.y, 1.0)) * 14.0;
-  vec2 uv = coverUv(uvIn);
+  vec2 uv = cameraUv(uvIn);
   vec4 acc = vec4(0.0);
   // Clean gaussian-style blur (frosted mirror look).
   acc += texture2D(u_texture, uv) * 0.152;
-  acc += texture2D(u_texture, coverUv(uvIn + vec2(1.0, 0.0) * px)) * 0.108;
-  acc += texture2D(u_texture, coverUv(uvIn + vec2(-1.0, 0.0) * px)) * 0.108;
-  acc += texture2D(u_texture, coverUv(uvIn + vec2(0.0, 1.0) * px)) * 0.108;
-  acc += texture2D(u_texture, coverUv(uvIn + vec2(0.0, -1.0) * px)) * 0.108;
-  acc += texture2D(u_texture, coverUv(uvIn + vec2(1.0, 1.0) * px)) * 0.064;
-  acc += texture2D(u_texture, coverUv(uvIn + vec2(-1.0, -1.0) * px)) * 0.064;
-  acc += texture2D(u_texture, coverUv(uvIn + vec2(1.0, -1.0) * px)) * 0.064;
-  acc += texture2D(u_texture, coverUv(uvIn + vec2(-1.0, 1.0) * px)) * 0.064;
-  acc += texture2D(u_texture, coverUv(uvIn + vec2(2.0, 0.0) * px)) * 0.032;
-  acc += texture2D(u_texture, coverUv(uvIn + vec2(-2.0, 0.0) * px)) * 0.032;
-  acc += texture2D(u_texture, coverUv(uvIn + vec2(0.0, 2.0) * px)) * 0.032;
-  acc += texture2D(u_texture, coverUv(uvIn + vec2(0.0, -2.0) * px)) * 0.032;
-  acc += texture2D(u_texture, coverUv(uvIn + vec2(2.0, 2.0) * px)) * 0.016;
-  acc += texture2D(u_texture, coverUv(uvIn + vec2(-2.0, -2.0) * px)) * 0.016;
-  acc += texture2D(u_texture, coverUv(uvIn + vec2(2.0, -2.0) * px)) * 0.016;
-  acc += texture2D(u_texture, coverUv(uvIn + vec2(-2.0, 2.0) * px)) * 0.016;
+  acc += texture2D(u_texture, cameraUv(uvIn + vec2(1.0, 0.0) * px)) * 0.108;
+  acc += texture2D(u_texture, cameraUv(uvIn + vec2(-1.0, 0.0) * px)) * 0.108;
+  acc += texture2D(u_texture, cameraUv(uvIn + vec2(0.0, 1.0) * px)) * 0.108;
+  acc += texture2D(u_texture, cameraUv(uvIn + vec2(0.0, -1.0) * px)) * 0.108;
+  acc += texture2D(u_texture, cameraUv(uvIn + vec2(1.0, 1.0) * px)) * 0.064;
+  acc += texture2D(u_texture, cameraUv(uvIn + vec2(-1.0, -1.0) * px)) * 0.064;
+  acc += texture2D(u_texture, cameraUv(uvIn + vec2(1.0, -1.0) * px)) * 0.064;
+  acc += texture2D(u_texture, cameraUv(uvIn + vec2(-1.0, 1.0) * px)) * 0.064;
+  acc += texture2D(u_texture, cameraUv(uvIn + vec2(2.0, 0.0) * px)) * 0.032;
+  acc += texture2D(u_texture, cameraUv(uvIn + vec2(-2.0, 0.0) * px)) * 0.032;
+  acc += texture2D(u_texture, cameraUv(uvIn + vec2(0.0, 2.0) * px)) * 0.032;
+  acc += texture2D(u_texture, cameraUv(uvIn + vec2(0.0, -2.0) * px)) * 0.032;
+  acc += texture2D(u_texture, cameraUv(uvIn + vec2(2.0, 2.0) * px)) * 0.016;
+  acc += texture2D(u_texture, cameraUv(uvIn + vec2(-2.0, -2.0) * px)) * 0.016;
+  acc += texture2D(u_texture, cameraUv(uvIn + vec2(2.0, -2.0) * px)) * 0.016;
+  acc += texture2D(u_texture, cameraUv(uvIn + vec2(-2.0, 2.0) * px)) * 0.016;
   return acc;
 }
 
