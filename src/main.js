@@ -130,6 +130,7 @@ let tiltTarget = new THREE.Vector2(0, 0);
 let tiltSmooth = new THREE.Vector2(0, 0);
 let faceDetectorPromise = /** @type {Promise<FaceDetector | null>} */ (Promise.resolve(null));
 const neckSmooth = { x: 50, y: 42 };
+let bassPlayed = false;
 
 const BASS_URL = '/assets/bass-hit.wav';
 const FALLBACK_URL = '/assets/fallback.mp4';
@@ -200,10 +201,14 @@ async function unlockGesturePerks() {
   // Audio + orientation permissions MUST be tied to a user gesture (especially iOS).
   if (!audioCtx) audioCtx = new AudioContext();
   if (audioCtx.state !== 'running') await audioCtx.resume();
-  try {
-    await playBassHit(audioCtx);
-  } catch {
-    synthBassSlam(audioCtx);
+  if (!bassPlayed) {
+    try {
+      await playBassHit(audioCtx);
+      bassPlayed = true;
+    } catch {
+      synthBassSlam(audioCtx);
+      bassPlayed = true;
+    }
   }
 
   await requestOrientationIOS();
@@ -221,6 +226,40 @@ requestAnimationFrame(() => {
     // Silent: user can still tap to initiate and/or go to fallback.
   });
 });
+
+// Best-effort autoplay on access (works when browser policy allows).
+requestAnimationFrame(async () => {
+  try {
+    if (bassPlayed) return;
+    if (!audioCtx) audioCtx = new AudioContext();
+    if (audioCtx.state === 'running') {
+      await playBassHit(audioCtx);
+      bassPlayed = true;
+    }
+  } catch {
+    // Most browsers block this without gesture; fallback below handles it.
+  }
+});
+
+// Guaranteed first-interaction fallback so the visit always gets the bass hit.
+const playBassOnFirstGesture = async () => {
+  if (bassPlayed) return;
+  try {
+    if (!audioCtx) audioCtx = new AudioContext();
+    if (audioCtx.state !== 'running') await audioCtx.resume();
+    await playBassHit(audioCtx);
+    bassPlayed = true;
+  } catch {
+    try {
+      synthBassSlam(audioCtx);
+      bassPlayed = true;
+    } catch {
+      // ignore
+    }
+  }
+};
+window.addEventListener('pointerdown', playBassOnFirstGesture, { once: true, passive: true });
+window.addEventListener('keydown', playBassOnFirstGesture, { once: true });
 
 // —— Bass (Web Audio synth — zero latency on gesture) ——————————————
 
