@@ -1,0 +1,336 @@
+:root {
+  color-scheme: dark;
+  --void: #000000;
+  --blood: #6e0000;
+  --blood-hot: #b80f0f;
+  --silver: #9ca3af;
+  --terminal: #f3f4f6;
+  --font-display: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+  --line: rgba(243, 244, 246, 0.16);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--void);
+  font-family: var(--font-display);
+  -webkit-tap-highlight-color: transparent;
+}
+
+#app {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 100dvh;
+}
+
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--void);
+  color: var(--terminal);
+}
+
+#init-scan {
+  cursor: pointer;
+  padding: env(safe-area-inset-top) 1rem env(safe-area-inset-bottom);
+  user-select: none;
+}
+
+.terminal {
+  max-width: 90vw;
+  text-align: left;
+}
+
+.terminal-line {
+  margin: 0;
+  font-size: clamp(0.85rem, 3vw, 1.1rem);
+  letter-spacing: 0.04em;
+}
+
+.mono,
+.terminal-out {
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+}
+
+.tap-hint {
+  margin: 2rem 0 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.42em;
+  opacity: 0.6;
+  animation: breathe 4s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Mirror stack */
+.mirror-stage {
+  position: absolute;
+  inset: 0;
+  background: var(--void);
+}
+
+.mirror-stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: none;
+  opacity: 0;
+}
+
+.mirror-stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: none;
+}
+
+.eye-fx-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+  display: none !important;
+}
+
+.eye-dot {
+  position: absolute;
+  left: var(--eye-x, 50%);
+  top: var(--eye-y, 50%);
+  width: var(--eye-size, clamp(22px, 4vw, 42px));
+  height: var(--eye-size, clamp(22px, 4vw, 42px));
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 120ms ease;
+  background: url('/assets/redeye.png') center/contain no-repeat;
+  filter: drop-shadow(0 0 10px rgba(255, 24, 24, 0.95)) drop-shadow(0 0 24px rgba(180, 0, 0, 0.7));
+  mix-blend-mode: screen;
+  animation: eye-pulse 1.4s ease-in-out infinite;
+  box-shadow: none;
+}
+
+.eye-dot.active {
+  opacity: 1;
+}
+
+@keyframes eye-pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(0.98);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+}
+
+#webgl-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ui-layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3;
+  padding: 1.25rem 1rem calc(1.6rem + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  pointer-events: auto;
+}
+
+.headline {
+  margin: 0;
+  text-align: center;
+  font-size: clamp(0.7rem, 2.6vw, 0.9rem);
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--terminal);
+  text-shadow: 0 0 20px rgba(184, 15, 15, 0.44);
+  max-width: 24rem;
+  line-height: 1.45;
+}
+
+.brutal {
+  font-family: var(--font-display);
+}
+
+.brutal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  width: min(100%, 21rem);
+}
+
+.brutal-form input {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.62);
+  color: var(--terminal);
+  border-radius: 0;
+  outline: none;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6) inset, 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.brutal-form input::placeholder {
+  color: rgba(245, 245, 245, 0.35);
+  letter-spacing: 0.15em;
+}
+
+.brutal-form input:focus {
+  border-color: rgba(220, 38, 38, 0.55);
+  box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.35) inset, 0 0 20px rgba(220, 38, 38, 0.16);
+}
+
+.brutal-submit {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, rgba(160, 14, 14, 0.95), rgba(86, 0, 0, 0.96));
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4) inset, 0 0 0 1px rgba(255, 255, 255, 0.06);
+  transition: transform 0.08s ease, filter 0.12s ease;
+}
+
+.brutal-submit:active {
+  transform: translateY(1px) scale(0.99);
+  filter: brightness(0.98);
+}
+
+/* Frosted mascot layer over WebGL */
+.cupid-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 6vh;
+}
+
+.cupid-frame {
+  position: absolute;
+  top: var(--neck-y, 42%);
+  left: var(--center-x, 50%);
+  transform: translate(-50%, -30%);
+  width: min(60vw, 260px);
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+.cupid-art {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: grayscale(1) contrast(1.05) brightness(0.86);
+}
+
+.archival {
+  flex-direction: column;
+  gap: 2rem;
+  padding: env(safe-area-inset-top) 1rem env(safe-area-inset-bottom);
+}
+
+.terminal-out {
+  text-align: center;
+  font-size: clamp(0.8rem, 2.8vw, 1rem);
+  color: var(--silver);
+}
+
+.terminal-out p {
+  margin: 0.35rem 0;
+}
+
+.instagram-pulse {
+  position: absolute;
+  right: calc(1rem + env(safe-area-inset-right));
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--blood-hot);
+  text-decoration: none;
+  animation: instagram-glow 1.8s ease-in-out infinite;
+}
+
+@keyframes instagram-glow {
+  0%,
+  100% {
+    opacity: 0.65;
+    text-shadow: 0 0 6px rgba(220, 38, 38, 0.3);
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    text-shadow: 0 0 18px rgba(220, 38, 38, 0.85);
+    transform: scale(1.03);
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+#procedural-source,
+#source-video {
+  position: fixed;
+  width: 2px;
+  height: 2px;
+  opacity: 0;
+  pointer-events: none;
+}
